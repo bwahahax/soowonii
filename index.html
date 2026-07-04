@@ -423,31 +423,46 @@
   // ============================================================
   // ✏️  ONLY EDIT THIS SECTION
   // ============================================================
-  const GITHUB_USER = "bwahahax";
-  const GITHUB_REPO = "soowonii";
+  const GITHUB_USER   = "bwahahax";
+  const GITHUB_REPO   = "soowonii";
   const PHOTO_FOLDERS = [
-    "photos",    // ← your first folder name in the repo
-       // ← your second folder name (rename as needed)
-    // "photos3" ← uncomment and add more folders anytime
+    "photos",
+    "photos2",
+    // "photos3",
   ];
-  const SONG_URL   = "Daniel Jikal- 'Fresh'.mp3"; // ← swap with your .mp3 link
-  const TRACK_NAME = "Fresh — Daniel Jikal";  // ← shown in the music bar
+  const SONG_URL   = "https://YOUR_SONG_URL_HERE.mp3";
+  const TRACK_NAME = "Your Song Title — Artist Name";
   const CAPTION    = "for the mems - australia 2026 🇦🇺🦘🐨";
+
+  // ── TEST MODE ──────────────────────────────────────────────
+  // Set to true to test with placeholder images before your
+  // GitHub folders are set up. Set back to false when ready.
+  const TEST_MODE = true;
+  const TEST_PHOTOS = [
+    "https://picsum.photos/seed/a/400/400",
+    "https://picsum.photos/seed/b/400/400",
+    "https://picsum.photos/seed/c/400/400",
+    "https://picsum.photos/seed/d/400/400",
+    "https://picsum.photos/seed/e/400/400",
+    "https://picsum.photos/seed/f/400/400",
+  ];
   // ============================================================
 
   const IMAGE_EXTENSIONS = /\.(jpg|jpeg|png|gif|webp)$/i;
+  const audio = document.getElementById('bgMusic');
 
-  let PHOTOS = [];        // filled from GitHub API on load
-  let queue = [];         // shuffled queue — next() walks through this
-  let queueIndex = -1;    // current position in queue
-  let history = [];       // every photo shown so far, in order
-  let historyIndex = -1;  // current position in history (-1 = nothing shown yet)
-  let isPlaying = false;
-  let isMuted = false;
+  // State
+  let PHOTOS      = [];
+  let queue       = [];   // current shuffled batch
+  let queuePos    = -1;   // where we are in the queue
+  let history     = [];   // all photos shown so far in order
+  let histPos     = -1;   // where we are in history
+  let isPlaying   = false;
+  let isMuted     = false;
   let progressTimer = null;
-  let dotInterval = null;
+  let dotInterval   = null;
 
-  // Fisher-Yates shuffle
+  // ── Shuffle (Fisher-Yates) ────────────────────────────────────────
   function shuffle(arr) {
     const a = [...arr];
     for (let i = a.length - 1; i > 0; i--) {
@@ -457,27 +472,23 @@
     return a;
   }
 
-  // Get the next photo from the shuffle queue.
-  // Reshuffles only after every photo has been seen once.
-  function nextFromQueue() {
-    queueIndex++;
-    if (queueIndex >= queue.length) {
-      queue = shuffle(PHOTOS);
-      queueIndex = 0;
+  // Pull the next URL from the queue.
+  // When the queue runs out, reshuffle all photos for a fresh round.
+  function pullNext() {
+    queuePos++;
+    if (queuePos >= queue.length) {
+      queue    = shuffle(PHOTOS);
+      queuePos = 0;
     }
-    return queue[queueIndex];
+    return queue[queuePos];
   }
 
-  const audio = document.getElementById('bgMusic');
-
-  // ── Fetch photo list from GitHub API ────────────────────────────
+  // ── GitHub photo loading ──────────────────────────────────────────
   async function fetchFolder(folder) {
-    const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${folder}`;
-    const res = await fetch(url);
-    if (!res.ok) {
-      console.warn(`Could not load folder: ${folder} (${res.status})`);
-      return [];
-    }
+    const res = await fetch(
+      `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${folder}`
+    );
+    if (!res.ok) { console.warn(`Folder not found: ${folder}`); return []; }
     const files = await res.json();
     return files
       .filter(f => f.type === 'file' && IMAGE_EXTENSIONS.test(f.name))
@@ -487,14 +498,18 @@
   async function loadAllPhotos() {
     document.getElementById('placeholderText').textContent = 'loading photos...';
     try {
-      const results = await Promise.all(PHOTO_FOLDERS.map(fetchFolder));
-      PHOTOS = results.flat();
+      if (TEST_MODE) {
+        PHOTOS = TEST_PHOTOS;
+      } else {
+        const results = await Promise.all(PHOTO_FOLDERS.map(fetchFolder));
+        PHOTOS = results.flat();
+      }
       if (PHOTOS.length === 0) {
         document.getElementById('placeholderText').textContent = 'no photos found — check folder names';
         return;
       }
-      queue = shuffle(PHOTOS); // build the first shuffle queue
-      queueIndex = -1;
+      queue    = shuffle(PHOTOS);
+      queuePos = -1;
       document.getElementById('placeholderText').textContent = 'tap ▶ to reveal a memory';
     } catch (e) {
       document.getElementById('placeholderText').textContent = 'error loading photos';
@@ -502,24 +517,22 @@
     }
   }
 
-  // ── Boot ─────────────────────────────────────────────────────────
+  // ── Boot ──────────────────────────────────────────────────────────
   window.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('trackNameDisplay').textContent = TRACK_NAME;
-
     if (SONG_URL && !SONG_URL.includes('YOUR_SONG')) {
-      audio.src = SONG_URL;
+      audio.src    = SONG_URL;
       audio.volume = 0.6;
     } else {
       document.getElementById('trackNameDisplay').textContent = 'No track loaded';
     }
-
     await loadAllPhotos();
   });
 
-  // ── Audio ────────────────────────────────────────────────────────
+  // ── Audio ─────────────────────────────────────────────────────────
   function toggleMute() {
-    isMuted = !isMuted;
-    audio.muted = isMuted;
+    isMuted      = !isMuted;
+    audio.muted  = isMuted;
     document.getElementById('muteIcon').innerHTML = isMuted
       ? '<path d="M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06A8.99 8.99 0 0 0 17.73 18l2 2L21 18.73 4.27 3zM12 4 9.91 6.09 12 8.18V4z"/>'
       : '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>';
@@ -529,7 +542,8 @@
     clearInterval(progressTimer);
     progressTimer = setInterval(() => {
       if (!audio.duration) return;
-      document.getElementById('progressFill').style.width = (audio.currentTime / audio.duration * 100) + '%';
+      document.getElementById('progressFill').style.width =
+        (audio.currentTime / audio.duration * 100) + '%';
       document.getElementById('timeElapsed').textContent = fmt(audio.currentTime);
       document.getElementById('timeDuration').textContent = fmt(audio.duration);
     }, 500);
@@ -537,8 +551,8 @@
 
   function seekAudio(e) {
     if (!audio.duration) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
+    const rect         = e.currentTarget.getBoundingClientRect();
+    audio.currentTime  = ((e.clientX - rect.left) / rect.width) * audio.duration;
   }
 
   function fmt(s) {
@@ -546,10 +560,16 @@
     return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
   }
 
-  audio.addEventListener('play',  () => { document.getElementById('waveform').classList.remove('paused'); startProgressTimer(); });
-  audio.addEventListener('pause', () => { document.getElementById('waveform').classList.add('paused'); clearInterval(progressTimer); });
+  audio.addEventListener('play',  () => {
+    document.getElementById('waveform').classList.remove('paused');
+    startProgressTimer();
+  });
+  audio.addEventListener('pause', () => {
+    document.getElementById('waveform').classList.add('paused');
+    clearInterval(progressTimer);
+  });
 
-  // ── Photos ───────────────────────────────────────────────────────
+  // ── Playback controls ─────────────────────────────────────────────
   function togglePlay() {
     isPlaying ? pausePlay() : startPlay();
   }
@@ -557,12 +577,13 @@
   function startPlay() {
     if (PHOTOS.length === 0) return;
     isPlaying = true;
-    document.getElementById('playIcon').innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
-    // Only load first photo here — next/prev handle their own advances
-    if (historyIndex === -1) {
-      const url = nextFromQueue();
+    document.getElementById('playIcon').innerHTML =
+      '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+    // Load the very first photo only if nothing has been shown yet
+    if (histPos === -1) {
+      const url = pullNext();
       history.push(url);
-      historyIndex = 0;
+      histPos = 0;
       renderPhoto(url);
     }
     scheduleDots();
@@ -571,68 +592,84 @@
 
   function pausePlay() {
     isPlaying = false;
-    document.getElementById('playIcon').innerHTML = '<path d="M8 5v14l11-7z"/>';
+    document.getElementById('playIcon').innerHTML =
+      '<path d="M8 5v14l11-7z"/>';
     audio.pause();
     clearDots();
   }
 
-  // Next: pull the next photo from the shuffle queue and add to history
+  // ── Next ──────────────────────────────────────────────────────────
+  // If the user went back, pressing next replays the already-seen
+  // history forward before pulling anything new from the queue.
   function nextMemory() {
     if (PHOTOS.length === 0) return;
-    // If we went back and are mid-history, replay forward first
-    if (historyIndex < history.length - 1) {
-      historyIndex++;
-      renderPhoto(history[historyIndex]);
+
+    if (histPos < history.length - 1) {
+      // Still have unseen-again history ahead — step forward through it
+      histPos++;
+      renderPhoto(history[histPos]);
     } else {
-      // At the front — pull a fresh photo from the queue
-      const url = nextFromQueue();
+      // At the tip of history — pull a brand new photo from the queue
+      const url = pullNext();
       history.push(url);
-      historyIndex = history.length - 1;
+      histPos = history.length - 1;
       renderPhoto(url);
     }
+
     if (!isPlaying) {
       isPlaying = true;
-      document.getElementById('playIcon').innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+      document.getElementById('playIcon').innerHTML =
+        '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
       scheduleDots();
       if (audio.src) audio.play().catch(() => {});
     }
   }
 
-  // Back: step back through history — never pulls a new photo
+  // ── Back ──────────────────────────────────────────────────────────
+  // Steps back through the history stack — always the exact previous photo.
   function prevMemory() {
-    if (PHOTOS.length === 0 || historyIndex <= 0) return;
-    historyIndex--;
-    renderPhoto(history[historyIndex]);
+    if (PHOTOS.length === 0 || histPos <= 0) return;
+
+    histPos--;
+    renderPhoto(history[histPos]);
+
     if (!isPlaying) {
       isPlaying = true;
-      document.getElementById('playIcon').innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+      document.getElementById('playIcon').innerHTML =
+        '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
       scheduleDots();
       if (audio.src) audio.play().catch(() => {});
     }
   }
 
+  // ── Render ────────────────────────────────────────────────────────
   function renderPhoto(url) {
     if (!url) return;
     const img = document.getElementById('memoryPhoto');
     const ph  = document.getElementById('photoPlaceholder');
     img.classList.remove('loaded', 'flash');
     ph.style.display = 'flex';
-    void img.offsetWidth;
+    void img.offsetWidth;                  // force reflow so flash re-triggers
     img.classList.add('flash');
     img.onload  = () => { ph.style.display = 'none'; img.classList.add('loaded'); };
-    img.onerror = () => { document.getElementById('placeholderText').textContent = 'photo not found'; };
+    img.onerror = () => {
+      document.getElementById('placeholderText').textContent = 'photo not found';
+    };
     img.src = url;
     document.getElementById('captionDisplay').textContent = CAPTION;
   }
 
-  // ── Dots ─────────────────────────────────────────────────────────
+  // ── Dots ──────────────────────────────────────────────────────────
   function scheduleDots() {
     clearInterval(dotInterval);
     const ids = ['dot1','dot2','dot3','dot4','dot5','dot6'];
     let t = 0;
     dotInterval = setInterval(() => {
       ids.forEach((id, i) => {
-        document.getElementById(id).classList.toggle('active', i === t % ids.length || i === (t + 3) % ids.length);
+        document.getElementById(id).classList.toggle(
+          'active',
+          i === t % ids.length || i === (t + 3) % ids.length
+        );
       });
       t++;
     }, 350);
@@ -640,7 +677,9 @@
 
   function clearDots() {
     clearInterval(dotInterval);
-    ['dot1','dot2','dot3','dot4','dot5','dot6'].forEach(id => document.getElementById(id).classList.remove('active'));
+    ['dot1','dot2','dot3','dot4','dot5','dot6'].forEach(id =>
+      document.getElementById(id).classList.remove('active')
+    );
   }
 </script>
 </body>
