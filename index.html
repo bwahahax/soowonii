@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Jessica: RAW</title>
+  <title>Jessica In Oz</title>
   <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Oswald:wght@400;700&family=VT323&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
- 
+
     :root {
       --red: #C8321F;
       --blue: #5A8FB5;
@@ -16,7 +16,7 @@
       --orange: #E07030;
       --label-cream: #F0E8D0;
     }
- 
+
     body {
       background-color: var(--cream);
       font-family: 'Special Elite', cursive;
@@ -28,7 +28,7 @@
       padding: 24px 16px;
       overflow-x: hidden;
     }
- 
+
     body::before {
       content: '';
       position: fixed;
@@ -37,7 +37,7 @@
       pointer-events: none;
       z-index: 0;
     }
- 
+
     .player-shell {
       position: relative;
       z-index: 1;
@@ -48,7 +48,7 @@
       max-width: 380px;
       box-shadow: 6px 6px 0px #8B1A0A, 12px 12px 30px rgba(0,0,0,0.35);
     }
- 
+
     .header-label {
       background: var(--label-cream);
       border-radius: 6px 6px 0 0;
@@ -57,7 +57,7 @@
       margin-bottom: 14px;
       border-bottom: 2px solid var(--dark);
     }
- 
+
     .header-label .title {
       font-family: 'Oswald', sans-serif;
       font-weight: 700;
@@ -66,14 +66,14 @@
       text-transform: uppercase;
       color: var(--dark);
     }
- 
+
     .header-label .subtitle {
       font-family: 'VT323', monospace;
       font-size: 26px;
       color: var(--red);
       line-height: 1.1;
     }
- 
+
     .photo-stage {
       position: relative;
       width: 100%;
@@ -85,7 +85,7 @@
       border: 3px solid #111;
       box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
     }
- 
+
     .photo-stage img {
       width: 100%;
       height: 100%;
@@ -94,9 +94,9 @@
       transition: opacity 0.5s ease;
       display: block;
     }
- 
+
     .photo-stage img.loaded { opacity: 1; }
- 
+
     .photo-stage .placeholder {
       position: absolute;
       inset: 0;
@@ -111,11 +111,25 @@
       padding: 20px;
       gap: 8px;
     }
- 
+
     .photo-stage .placeholder svg { opacity: 0.3; }
- 
- 
- 
+
+    /* Loading state */
+    .loading-msg {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #888;
+      font-family: 'VT323', monospace;
+      font-size: 16px;
+      gap: 10px;
+    }
+
+    .loading-msg.visible { display: flex; }
+
     .music-bar {
       background: var(--dark);
       border-radius: 8px;
@@ -126,20 +140,20 @@
       gap: 10px;
       border: 2px solid rgba(255,255,255,0.07);
     }
- 
+
     .music-icon {
       color: var(--orange);
       flex-shrink: 0;
       animation: pulse-note 1.8s ease-in-out infinite;
     }
- 
+
     @keyframes pulse-note {
       0%, 100% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.6; transform: scale(0.9); }
     }
- 
+
     .music-info { flex: 1; overflow: hidden; }
- 
+
     .music-info .track-name {
       font-family: 'VT323', monospace;
       font-size: 15px;
@@ -148,7 +162,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
- 
+
     .music-info .track-sub {
       font-family: 'Oswald', sans-serif;
       font-size: 9px;
@@ -156,7 +170,7 @@
       text-transform: uppercase;
       color: #888;
     }
- 
+
     .waveform {
       display: flex;
       align-items: center;
@@ -164,7 +178,7 @@
       height: 20px;
       flex-shrink: 0;
     }
- 
+
     .waveform span {
       display: block;
       width: 3px;
@@ -172,29 +186,29 @@
       background: var(--blue);
       animation: wave 1.2s ease-in-out infinite;
     }
- 
+
     .waveform span:nth-child(1) { height: 6px;  animation-delay: 0s; }
     .waveform span:nth-child(2) { height: 14px; animation-delay: 0.1s; }
     .waveform span:nth-child(3) { height: 10px; animation-delay: 0.2s; }
     .waveform span:nth-child(4) { height: 18px; animation-delay: 0.15s; }
     .waveform span:nth-child(5) { height: 8px;  animation-delay: 0.05s; }
- 
+
     @keyframes wave {
       0%, 100% { transform: scaleY(1); }
       50% { transform: scaleY(0.3); }
     }
- 
+
     .waveform.paused span { animation-play-state: paused; }
- 
-    .progress-wrap { margin-bottom: 10px; cursor: pointer; }
- 
+
+    .progress-wrap { margin-bottom: 12px; cursor: pointer; }
+
     .progress-track {
       background: rgba(0,0,0,0.3);
       border-radius: 4px;
       height: 4px;
       overflow: hidden;
     }
- 
+
     .progress-fill {
       height: 100%;
       background: linear-gradient(to right, var(--orange), var(--blue));
@@ -202,18 +216,16 @@
       transition: width 0.5s linear;
       border-radius: 4px;
     }
- 
+
     .time-row { display: flex; justify-content: space-between; margin-top: 3px; }
- 
+
     .time-row span {
       font-family: 'VT323', monospace;
       font-size: 12px;
       color: var(--label-cream);
       opacity: 0.6;
     }
- 
- 
- 
+
     .caption-strip {
       background: var(--blue);
       border-radius: 8px;
@@ -226,7 +238,7 @@
       border: 2px solid rgba(0,0,0,0.2);
       box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 3px 3px 0 #3a6f95;
     }
- 
+
     .caption-text {
       font-family: 'Special Elite', cursive;
       font-size: 14px;
@@ -235,17 +247,7 @@
       line-height: 1.4;
       text-shadow: 0 1px 2px rgba(0,0,0,0.3);
     }
- 
-    .memory-counter {
-      font-family: 'VT323', monospace;
-      font-size: 18px;
-      color: var(--label-cream);
-      text-align: center;
-      letter-spacing: 1px;
-      margin-bottom: 6px;
-      opacity: 0.75;
-    }
- 
+
     .controls {
       background: var(--blue);
       border-radius: 8px;
@@ -257,9 +259,9 @@
       border: 2px solid rgba(0,0,0,0.2);
       box-shadow: 3px 3px 0 #3a6f95;
     }
- 
+
     .dots { display: flex; gap: 5px; }
- 
+
     .dot {
       width: 8px;
       height: 8px;
@@ -267,11 +269,11 @@
       border: 2px solid rgba(255,255,255,0.5);
       background: rgba(255,255,255,0.15);
     }
- 
+
     .dot.active { background: var(--label-cream); border-color: var(--label-cream); }
- 
+
     .btn-group { display: flex; gap: 8px; }
- 
+
     .ctrl-btn {
       background: none;
       border: none;
@@ -281,10 +283,11 @@
       transition: transform 0.1s ease, opacity 0.1s;
       opacity: 0.85;
     }
- 
+
     .ctrl-btn:hover { opacity: 1; transform: scale(1.15); }
     .ctrl-btn:active { transform: scale(0.92); }
- 
+    .ctrl-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
     .play-btn {
       background: var(--red);
       border: none;
@@ -299,10 +302,11 @@
       box-shadow: 2px 2px 0 #8B1A0A, 0 4px 10px rgba(0,0,0,0.3);
       transition: transform 0.1s, box-shadow 0.1s;
     }
- 
+
     .play-btn:hover { transform: scale(1.08); }
     .play-btn:active { transform: scale(0.95); box-shadow: 1px 1px 0 #8B1A0A; }
- 
+    .play-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
     .mute-btn {
       background: none;
       border: none;
@@ -316,44 +320,40 @@
       transition: opacity 0.2s;
     }
     .mute-btn:hover { opacity: 1; }
- 
- 
- 
+
     .flash { animation: flash 0.35s ease; }
     @keyframes flash {
       0% { opacity: 1; }
       40% { opacity: 0.15; }
       100% { opacity: 1; }
     }
- 
+
     @media (prefers-reduced-motion: reduce) {
       .waveform span, .music-icon { animation: none; }
     }
   </style>
 </head>
 <body>
- 
+
 <audio id="bgMusic" loop preload="auto"></audio>
- 
- 
- 
+
 <div class="player-shell">
   <div class="header-label">
-    <div class="title">Now Presenting</div>
-    <div class="subtitle">Jessica:RAW</div>
+    <div class="title">Now Playing</div>
+    <div class="subtitle">Jessica in Oz</div>
   </div>
- 
+
   <div class="photo-stage" id="photoStage">
     <div class="placeholder" id="photoPlaceholder">
       <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
         <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/>
         <polyline points="21 15 16 10 5 21"/>
       </svg>
-      <span>tap ▶ to reveal</span>
+      <span id="placeholderText">loading photos...</span>
     </div>
-    <img id="memoryPhoto" src="" alt="Memory" crossorigin="anonymous" />
+    <img id="memoryPhoto" src="" alt="Memory" />
   </div>
- 
+
   <div class="music-bar">
     <div class="music-icon">
       <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
@@ -367,13 +367,13 @@
     <div class="waveform paused" id="waveform">
       <span></span><span></span><span></span><span></span><span></span>
     </div>
-    <button class="mute-btn" id="muteBtn" onclick="toggleMute()" title="Mute">
+    <button class="mute-btn" onclick="toggleMute()" title="Mute">
       <svg id="muteIcon" width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
         <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
       </svg>
     </button>
   </div>
- 
+
   <div class="progress-wrap" onclick="seekAudio(event)">
     <div class="progress-track">
       <div class="progress-fill" id="progressFill"></div>
@@ -383,13 +383,11 @@
       <span id="timeDuration">0:00</span>
     </div>
   </div>
- 
-  <div class="memory-counter" id="memoryCounter">— of — photos</div>
- 
+
   <div class="caption-strip">
-    <div class="caption-text" id="captionDisplay">tap ▶ to open the file ♪</div>
+    <div class="caption-text" id="captionDisplay">tap ▶ to reveal a memory ♪</div>
   </div>
- 
+
   <div class="controls">
     <div class="dots">
       <div class="dot" id="dot1"></div>
@@ -402,7 +400,7 @@
           <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/>
         </svg>
       </button>
-      <button class="play-btn" onclick="togglePlay()">
+      <button class="play-btn" id="playBtn" onclick="togglePlay()">
         <svg id="playIcon" width="22" height="22" fill="currentColor" viewBox="0 0 24 24">
           <path d="M8 5v14l11-7z"/>
         </svg>
@@ -420,126 +418,156 @@
     </div>
   </div>
 </div>
- 
+
 <script>
   // ============================================================
-  // ✏️  EDIT THESE — your photos, song, and caption go here
+  // ✏️  ONLY EDIT THIS SECTION
   // ============================================================
-  const CONFIG = {
-    photos: [
-      "photos/1.JPG",  // ← swap these with your real Imgur links
-      "photos/2.JPG",
-      "photos/3.jpg",
-      "photos/4.JPG",
-      "photos/5.JPG",
-    ],
-    songUrl:   "Daniel Jikal- 'Fresh'.mp3",  // ← direct .mp3 link
-    trackName: "Fresh - Daniel Jikal",    // ← shown in the music bar
-    caption:   "This Is What You Do to Us 😤",     // ← shown under every photo
-  };
+  const GITHUB_USER = "bwahahax";
+  const GITHUB_REPO = "soowonii";
+  const PHOTO_FOLDERS = [
+    "photos",    // ← your first folder name in the repo
+    "photos2",   // ← your second folder name (rename as needed)
+    // "photos3" ← uncomment and add more folders anytime
+  ];
+  const SONG_URL   = "Daniel Jikal- 'Fresh'.mp3"; // ← swap with your .mp3 link
+  const TRACK_NAME = "Fresh — Daniel Jikal";  // ← shown in the music bar
+  const CAPTION    = "for the mems - australia may 2026 🇦🇺🦘🐨";
   // ============================================================
- 
+
+  const IMAGE_EXTENSIONS = /\.(jpg|jpeg|png|gif|webp)$/i;
+
+  let PHOTOS = [];       // filled from GitHub API on load
   let currentPhoto = null;
   let isPlaying = false;
   let isMuted = false;
   let progressTimer = null;
   let dotInterval = null;
- 
-  function pickRandom() {
-    const photos = CONFIG.photos;
-    if (photos.length === 0) return null;
-    if (photos.length === 1) return photos[0];
-    let pick;
-    do { pick = photos[Math.floor(Math.random() * photos.length)]; }
-    while (pick === currentPhoto);
-    return pick;
-  }
- 
+
   const audio = document.getElementById('bgMusic');
- 
-  // Boot
-  window.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('trackNameDisplay').textContent = CONFIG.trackName;
-    document.getElementById('memoryCounter').textContent = `— of ${CONFIG.photos.length} photos`;
- 
-    if (CONFIG.songUrl && !CONFIG.songUrl.includes('YOUR_SONG')) {
-      audio.src = CONFIG.songUrl;
+
+  // ── Fetch photo list from GitHub API ────────────────────────────
+  async function fetchFolder(folder) {
+    const url = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${folder}`;
+    const res = await fetch(url);
+    if (!res.ok) {
+      console.warn(`Could not load folder: ${folder} (${res.status})`);
+      return [];
+    }
+    const files = await res.json();
+    return files
+      .filter(f => f.type === 'file' && IMAGE_EXTENSIONS.test(f.name))
+      .map(f => f.download_url);
+  }
+
+  async function loadAllPhotos() {
+    document.getElementById('placeholderText').textContent = 'loading photos...';
+    try {
+      const results = await Promise.all(PHOTO_FOLDERS.map(fetchFolder));
+      PHOTOS = results.flat();
+      if (PHOTOS.length === 0) {
+        document.getElementById('placeholderText').textContent = 'no photos found — check folder names';
+        return;
+      }
+      document.getElementById('placeholderText').textContent = 'tap ▶ to reveal a memory';
+    } catch (e) {
+      document.getElementById('placeholderText').textContent = 'error loading photos';
+      console.error(e);
+    }
+  }
+
+  // ── Boot ─────────────────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', async () => {
+    document.getElementById('trackNameDisplay').textContent = TRACK_NAME;
+
+    if (SONG_URL && !SONG_URL.includes('YOUR_SONG')) {
+      audio.src = SONG_URL;
       audio.volume = 0.6;
     } else {
       document.getElementById('trackNameDisplay').textContent = 'No track loaded';
     }
+
+    await loadAllPhotos();
   });
- 
+
+  // ── Audio ────────────────────────────────────────────────────────
   function toggleMute() {
     isMuted = !isMuted;
     audio.muted = isMuted;
-    const icon = document.getElementById('muteIcon');
-    icon.innerHTML = isMuted
+    document.getElementById('muteIcon').innerHTML = isMuted
       ? '<path d="M16.5 12A4.5 4.5 0 0 0 14 7.97v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51A8.796 8.796 0 0 0 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06A8.99 8.99 0 0 0 17.73 18l2 2L21 18.73 4.27 3zM12 4 9.91 6.09 12 8.18V4z"/>'
       : '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>';
   }
- 
+
   function startProgressTimer() {
     clearInterval(progressTimer);
     progressTimer = setInterval(() => {
       if (!audio.duration) return;
-      const pct = (audio.currentTime / audio.duration) * 100;
-      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('progressFill').style.width = (audio.currentTime / audio.duration * 100) + '%';
       document.getElementById('timeElapsed').textContent = fmt(audio.currentTime);
       document.getElementById('timeDuration').textContent = fmt(audio.duration);
     }, 500);
   }
- 
+
   function seekAudio(e) {
     if (!audio.duration) return;
     const rect = e.currentTarget.getBoundingClientRect();
     audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
   }
- 
+
   function fmt(s) {
     if (isNaN(s)) return '0:00';
-    return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+    return `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
   }
- 
+
   audio.addEventListener('play',  () => { document.getElementById('waveform').classList.remove('paused'); startProgressTimer(); });
   audio.addEventListener('pause', () => { document.getElementById('waveform').classList.add('paused'); clearInterval(progressTimer); });
- 
-  // Photos
+
+  // ── Photos ───────────────────────────────────────────────────────
+  function pickRandom() {
+    if (PHOTOS.length === 0) return null;
+    if (PHOTOS.length === 1) return PHOTOS[0];
+    let pick;
+    do { pick = PHOTOS[Math.floor(Math.random() * PHOTOS.length)]; }
+    while (pick === currentPhoto);
+    return pick;
+  }
+
   function togglePlay() {
     isPlaying ? pausePlay() : startPlay();
   }
- 
+
   function startPlay() {
+    if (PHOTOS.length === 0) return;
     isPlaying = true;
     document.getElementById('playIcon').innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
     if (!currentPhoto) showPhoto(pickRandom());
     scheduleDots();
     if (audio.src) audio.play().catch(() => {});
   }
- 
+
   function pausePlay() {
     isPlaying = false;
     document.getElementById('playIcon').innerHTML = '<path d="M8 5v14l11-7z"/>';
     audio.pause();
     clearDots();
   }
- 
+
   function nextMemory() {
+    if (PHOTOS.length === 0) return;
     showPhoto(pickRandom());
     if (!isPlaying) startPlay();
   }
- 
+
   function prevMemory() {
+    if (PHOTOS.length === 0) return;
     showPhoto(pickRandom());
     if (!isPlaying) startPlay();
   }
- 
-  let displayIndex = 0; // shown position, cycles 1→total then wraps
- 
+
   function showPhoto(url) {
     if (!url) return;
     currentPhoto = url;
-    displayIndex = (displayIndex % CONFIG.photos.length) + 1;
     const img = document.getElementById('memoryPhoto');
     const ph  = document.getElementById('photoPlaceholder');
     img.classList.remove('loaded', 'flash');
@@ -547,24 +575,24 @@
     void img.offsetWidth;
     img.classList.add('flash');
     img.onload  = () => { ph.style.display = 'none'; img.classList.add('loaded'); };
-    img.onerror = () => { ph.querySelector('span').textContent = 'photo not found'; };
+    img.onerror = () => { document.getElementById('placeholderText').textContent = 'photo not found'; };
     img.src = url;
-    document.getElementById('memoryCounter').textContent = `${displayIndex} of ${CONFIG.photos.length} photos`;
-    document.getElementById('captionDisplay').textContent = CONFIG.caption;
+    document.getElementById('captionDisplay').textContent = CAPTION;
   }
- 
+
+  // ── Dots ─────────────────────────────────────────────────────────
   function scheduleDots() {
     clearInterval(dotInterval);
     const ids = ['dot1','dot2','dot3','dot4','dot5','dot6'];
     let t = 0;
     dotInterval = setInterval(() => {
       ids.forEach((id, i) => {
-        document.getElementById(id).classList.toggle('active', i === t % ids.length || i === (t+3) % ids.length);
+        document.getElementById(id).classList.toggle('active', i === t % ids.length || i === (t + 3) % ids.length);
       });
       t++;
     }, 350);
   }
- 
+
   function clearDots() {
     clearInterval(dotInterval);
     ['dot1','dot2','dot3','dot4','dot5','dot6'].forEach(id => document.getElementById(id).classList.remove('active'));
@@ -572,4 +600,3 @@
 </script>
 </body>
 </html>
- 
