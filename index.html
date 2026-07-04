@@ -427,7 +427,7 @@
   const GITHUB_REPO = "soowonii";
   const PHOTO_FOLDERS = [
     "photos",    // ← your first folder name in the repo
-      // ← your second folder name (rename as needed)
+       // ← your second folder name (rename as needed)
     // "photos3" ← uncomment and add more folders anytime
   ];
   const SONG_URL   = "Daniel Jikal- 'Fresh'.mp3"; // ← swap with your .mp3 link
@@ -558,8 +558,13 @@
     if (PHOTOS.length === 0) return;
     isPlaying = true;
     document.getElementById('playIcon').innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
-    // Show first photo if nothing shown yet
-    if (historyIndex === -1) advanceForward();
+    // Only load first photo here — next/prev handle their own advances
+    if (historyIndex === -1) {
+      const url = nextFromQueue();
+      history.push(url);
+      historyIndex = 0;
+      renderPhoto(url);
+    }
     scheduleDots();
     if (audio.src) audio.play().catch(() => {});
   }
@@ -571,34 +576,38 @@
     clearDots();
   }
 
-  // Next: always advances forward through the shuffle queue
+  // Next: pull the next photo from the shuffle queue and add to history
   function nextMemory() {
     if (PHOTOS.length === 0) return;
-    advanceForward();
-    if (!isPlaying) startPlay();
+    // If we went back and are mid-history, replay forward first
+    if (historyIndex < history.length - 1) {
+      historyIndex++;
+      renderPhoto(history[historyIndex]);
+    } else {
+      // At the front — pull a fresh photo from the queue
+      const url = nextFromQueue();
+      history.push(url);
+      historyIndex = history.length - 1;
+      renderPhoto(url);
+    }
+    if (!isPlaying) {
+      isPlaying = true;
+      document.getElementById('playIcon').innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+      scheduleDots();
+      if (audio.src) audio.play().catch(() => {});
+    }
   }
 
-  // Back: goes to the actual previous photo in history
-  // If at the start of history, does nothing
+  // Back: step back through history — never pulls a new photo
   function prevMemory() {
     if (PHOTOS.length === 0 || historyIndex <= 0) return;
     historyIndex--;
     renderPhoto(history[historyIndex]);
-    if (!isPlaying) startPlay();
-  }
-
-  // Advance forward: if we went back and now go forward again,
-  // replay the already-seen history before pulling new ones
-  function advanceForward() {
-    historyIndex++;
-    if (historyIndex < history.length) {
-      // Re-show an already-seen photo (user went back then forward)
-      renderPhoto(history[historyIndex]);
-    } else {
-      // Pull the next unseen photo from the shuffle queue
-      const url = nextFromQueue();
-      history.push(url);
-      renderPhoto(url);
+    if (!isPlaying) {
+      isPlaying = true;
+      document.getElementById('playIcon').innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+      scheduleDots();
+      if (audio.src) audio.play().catch(() => {});
     }
   }
 
