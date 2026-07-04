@@ -429,9 +429,8 @@
     "photos",
   ];
   const SONG_URL   = "Daniel Jikal- 'Fresh'.mp3";
-  const TRACK_NAME = "Fresh — Daniel Jikal";
+  const TRACK_NAME = "Fresh - Daniel Jikal";
   const CAPTION    = "for the mems - australia 2026 🇦🇺🦘🐨";
-
   // ============================================================
 
   const IMAGE_EXTENSIONS = /\.(jpg|jpeg|png|gif|webp)$/i;
@@ -484,12 +483,8 @@
   async function loadAllPhotos() {
     document.getElementById('placeholderText').textContent = 'loading photos...';
     try {
-      if (TEST_MODE) {
-        PHOTOS = TEST_PHOTOS;
-      } else {
-        const results = await Promise.all(PHOTO_FOLDERS.map(fetchFolder));
-        PHOTOS = results.flat();
-      }
+      const results = await Promise.all(PHOTO_FOLDERS.map(fetchFolder));
+      PHOTOS = results.flat();
       if (PHOTOS.length === 0) {
         document.getElementById('placeholderText').textContent = 'no photos found — check folder names';
         return;
