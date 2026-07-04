@@ -437,12 +437,36 @@
 
   const IMAGE_EXTENSIONS = /\.(jpg|jpeg|png|gif|webp)$/i;
 
-  let PHOTOS = [];       // filled from GitHub API on load
-  let currentPhoto = null;
+  let PHOTOS = [];        // filled from GitHub API on load
+  let queue = [];         // shuffled queue — next() walks through this
+  let queueIndex = -1;    // current position in queue
+  let history = [];       // every photo shown so far, in order
+  let historyIndex = -1;  // current position in history (-1 = nothing shown yet)
   let isPlaying = false;
   let isMuted = false;
   let progressTimer = null;
   let dotInterval = null;
+
+  // Fisher-Yates shuffle
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  // Get the next photo from the shuffle queue.
+  // Reshuffles only after every photo has been seen once.
+  function nextFromQueue() {
+    queueIndex++;
+    if (queueIndex >= queue.length) {
+      queue = shuffle(PHOTOS);
+      queueIndex = 0;
+    }
+    return queue[queueIndex];
+  }
 
   const audio = document.getElementById('bgMusic');
 
@@ -469,6 +493,8 @@
         document.getElementById('placeholderText').textContent = 'no photos found — check folder names';
         return;
       }
+      queue = shuffle(PHOTOS); // build the first shuffle queue
+      queueIndex = -1;
       document.getElementById('placeholderText').textContent = 'tap ▶ to reveal a memory';
     } catch (e) {
       document.getElementById('placeholderText').textContent = 'error loading photos';
@@ -524,15 +550,6 @@
   audio.addEventListener('pause', () => { document.getElementById('waveform').classList.add('paused'); clearInterval(progressTimer); });
 
   // ── Photos ───────────────────────────────────────────────────────
-  function pickRandom() {
-    if (PHOTOS.length === 0) return null;
-    if (PHOTOS.length === 1) return PHOTOS[0];
-    let pick;
-    do { pick = PHOTOS[Math.floor(Math.random() * PHOTOS.length)]; }
-    while (pick === currentPhoto);
-    return pick;
-  }
-
   function togglePlay() {
     isPlaying ? pausePlay() : startPlay();
   }
@@ -541,7 +558,8 @@
     if (PHOTOS.length === 0) return;
     isPlaying = true;
     document.getElementById('playIcon').innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
-    if (!currentPhoto) showPhoto(pickRandom());
+    // Show first photo if nothing shown yet
+    if (historyIndex === -1) advanceForward();
     scheduleDots();
     if (audio.src) audio.play().catch(() => {});
   }
@@ -553,21 +571,39 @@
     clearDots();
   }
 
+  // Next: always advances forward through the shuffle queue
   function nextMemory() {
     if (PHOTOS.length === 0) return;
-    showPhoto(pickRandom());
+    advanceForward();
     if (!isPlaying) startPlay();
   }
 
+  // Back: goes to the actual previous photo in history
+  // If at the start of history, does nothing
   function prevMemory() {
-    if (PHOTOS.length === 0) return;
-    showPhoto(pickRandom());
+    if (PHOTOS.length === 0 || historyIndex <= 0) return;
+    historyIndex--;
+    renderPhoto(history[historyIndex]);
     if (!isPlaying) startPlay();
   }
 
-  function showPhoto(url) {
+  // Advance forward: if we went back and now go forward again,
+  // replay the already-seen history before pulling new ones
+  function advanceForward() {
+    historyIndex++;
+    if (historyIndex < history.length) {
+      // Re-show an already-seen photo (user went back then forward)
+      renderPhoto(history[historyIndex]);
+    } else {
+      // Pull the next unseen photo from the shuffle queue
+      const url = nextFromQueue();
+      history.push(url);
+      renderPhoto(url);
+    }
+  }
+
+  function renderPhoto(url) {
     if (!url) return;
-    currentPhoto = url;
     const img = document.getElementById('memoryPhoto');
     const ph  = document.getElementById('photoPlaceholder');
     img.classList.remove('loaded', 'flash');
